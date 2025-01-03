@@ -15,6 +15,14 @@ def draw_lines(img, left_line, right_line, color=[0, 255, 0], thickness=10):
     cv2.line(img, (right_line[0], right_line[1]), (right_line[2], right_line[3]), color, thickness)
     return img
 
+def make_points(H, average):
+    slope, y_int = average 
+    y1 = H
+    y2 = int(y1 * (3/5))
+    x1 = int((y1 - y_int) // slope)
+    x2 = int((y2 - y_int) // slope)
+    return np.array([x1, y1, x2, y2])
+
 def lane_detect(image):
     H, W, C = image.shape
     region_of_interest_vertices = [
@@ -38,12 +46,12 @@ def lane_detect(image):
     # Perform Hough Line Transform to detect lines
     lines = cv2.HoughLinesP(
         maksed_image,
-        rho=6,
-        theta=np.pi / 60,
-        threshold=160,
+        rho=2,
+        theta=np.pi / 180,
+        threshold=100,
         lines=np.array([]),
         minLineLength=40,
-        maxLineGap=25
+        maxLineGap=5
     )
 
     # Separate left and right lines
@@ -83,6 +91,25 @@ def lane_detect(image):
 
     return draw_lines(image, [left_x_start, max_y, left_x_end, min_y],
         [right_x_start, max_y, right_x_end, min_y])
+    
+    # # Separate left and right lines
+    # left = []
+    # right = []
+    # for line in lines:
+    #     for x1, y1, x2, y2 in line:
+    #         if x1 != x2:
+    #             slope, y_inter = np.polyfit((x1, x2), (y1, y2), deg=1)
+    #             if slope <= 0:  # Left lane
+    #                 left.append([slope, y_inter])
+    #             else:  # Right lane
+    #                 right.append([slope, y_inter])
+    
+    # left_avg = np.mean(left, axis=0)
+    # right_avg = np.mean(right, axis=0)
+    # left_line = make_points(H, left_avg)
+    # right_line = make_points(H, right_avg)
+
+    # return draw_lines(image, left_line, right_line)
 
 # Function to estimate distance based on bounding box size
 def estimate_distance(bbox_width, bbox_height):
